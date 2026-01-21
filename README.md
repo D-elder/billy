@@ -1,49 +1,48 @@
-# billy
+# Billy
 AI Finance Manager Bot to track expenses, manage budgets, and automate your personal finances
-
 
 # Billy: The Agentic Financial Coach ⏱️💸
 
 **Turn your 2026 financial resolutions into reality with proactive, agentic coaching.**
 
-> *Traditional apps perform a "financial autopsy"—telling you where things went wrong after the money is gone. [cite_start]Billy focuses on "financial health," intervening proactively to keep you on track.* [cite: 8]
+> *Traditional apps perform a "financial autopsy"—telling you where things went wrong after the money is gone. Billy focuses on "financial health," intervening proactively to keep you on track.*
 
 ![Billy Banner](https://img.shields.io/badge/Status-MVP-success) ![n8n](https://img.shields.io/badge/Orchestration-n8n-ff6e5c) ![OpenAI](https://img.shields.io/badge/AI-GPT--4o--mini-green) ![Telegram](https://img.shields.io/badge/Interface-Telegram-blue)
 
 ## 📖 Overview
 
-**Billy** is a frictionless, AI-powered financial assistant that lives entirely in **Telegram**. [cite_start]It removes the barrier to entry for budgeting by allowing natural language logging and receipt scanning[cite: 20].
+**Billy** is a frictionless, AI-powered financial assistant that lives entirely in **Telegram**. It removes the barrier to entry for budgeting by allowing natural language logging and receipt scanning.
 
-[cite_start]Unlike standard bots that annoy you with constant notifications, Billy uses **Agentic Silence**[cite: 32]. [cite_start]It reasons about your "Safe Spending Pace" vs. your "Actual Spending" and only speaks when you are at risk of breaking your budget, preserving your attention for when it matters most[cite: 33].
+Unlike standard bots that annoy you with constant notifications, Billy uses **Agentic Silence**. It reasons about your "Safe Spending Pace" vs. your "Actual Spending" and only speaks when you are at risk of breaking your budget, preserving your attention for when it matters most.
 
 ## ✨ Key Features
 
-* **💬 Frictionless Ingestion:** Log expenses by texting ("Spent $15 on lunch") or sending a photo of a receipt. [cite_start]No new apps to install[cite: 29].
-* [cite_start]**🧠 Intelligent Intent Classification:** Automatically distinguishes between setting a budget, logging a transaction, or general chatter[cite: 82].
-* [cite_start]**👁️ AI Vision (OCR):** Uses GPT-4o-mini to scan receipts, extracting date, merchant, total amount, and line items automatically[cite: 100].
-* [cite_start]**📉 Proactive Pacing Logic:** Calculates your **Time Ratio** (how far into the month you are) vs. **Spend Ratio** (how much budget is used)[cite: 31, 158].
-    * [cite_start]*On Track:* Silence (No message sent)[cite: 172].
-    * [cite_start]*Mild Risk:* Gentle nudge[cite: 174].
-    * [cite_start]*High Risk:* Clear intervention with actionable advice[cite: 175].
-* [cite_start]**📂 Automated Audit Trail:** Receipt images are automatically uploaded to Google Drive, and data is structured into a Google Sheet ledger[cite: 67].
-* [cite_start]**🛡️ Agentic & Safe:** The agent helps you make decisions but has no direct access to move your funds[cite: 188].
+* **💬 Frictionless Ingestion:** Log expenses by texting ("Spent $15 on lunch") or sending a photo of a receipt. No new apps to install.
+* **🧠 Intelligent Intent Classification:** Automatically distinguishes between setting a budget, logging a transaction, or general chatter.
+* **👁️ AI Vision (OCR):** Uses GPT-4o-mini to scan receipts, extracting date, merchant, total amount, and line items automatically.
+* **📉 Proactive Pacing Logic:** Calculates your **Time Ratio** (how far into the month you are) vs. **Spend Ratio** (how much budget is used).
+    * *On Track:* Silence (No message sent).
+    * *Mild Risk:* Gentle nudge.
+    * *High Risk:* Clear intervention with actionable advice.
+* **📂 Automated Audit Trail:** Receipt images are automatically uploaded to Google Drive, and data is structured into a Google Sheet ledger.
+* **🛡️ Agentic & Safe:** The agent helps you make decisions but has no direct access to move your funds.
 
 ## 🏗️ Architecture
 
-[cite_start]Billy runs on a modular **n8n** workflow that decouples data ingestion (real-time) from reasoning (scheduled)[cite: 69, 78].
+Billy runs on a modular **n8n** workflow that decouples data ingestion (real-time) from reasoning (scheduled).
 
-1.  [cite_start]**The Input (Telegram):** Receives text messages or images[cite: 70].
-2.  [cite_start]**The Brain (GPT-4o-mini):** Classifies intent, extracts entities to JSON, and handles OCR for images[cite: 80].
-3.  [cite_start]**The Ledger (Google Sheets):** Stores structured transaction data and budget limits[cite: 72].
-4.  **The Conscience (Scheduled Async Agent):** Runs daily (e.g., 9:30 AM). [cite_start]It checks the month's progress against the budget and decides *if* it needs to speak based on a severity scale[cite: 75, 76].
+1.  **The Input (Telegram):** Receives text messages or images.
+2.  **The Brain (GPT-4o-mini):** Classifies intent, extracts entities to JSON, and handles OCR for images.
+3.  **The Ledger (Google Sheets):** Stores structured transaction data and budget limits.
+4.  **The Conscience (Scheduled Async Agent):** Runs daily (e.g., 9:30 AM). It checks the month's progress against the budget and decides *if* it needs to speak based on a severity scale.
 
 ## 🛠️ Tech Stack
 
-* [cite_start]**Orchestration:** [n8n](https://n8n.io/) (Workflow Automation) [cite: 192]
+* **Orchestration:** [n8n](https://n8n.io/) (Workflow Automation)
 * **LLM & Vision:** OpenAI (GPT-4o-mini) & Google Gemini (Flash-Lite for messaging).
-* [cite_start]**Interface:** Telegram Bot API[cite: 195].
-* [cite_start]**Database:** Google Sheets[cite: 198].
-* [cite_start]**Storage:** Google Drive (for receipt images)[cite: 200].
+* **Interface:** Telegram Bot API.
+* **Database:** Google Sheets.
+* **Storage:** Google Drive (for receipt images).
 
 ## 🚀 Setup & Installation
 
