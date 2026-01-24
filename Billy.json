@@ -1,0 +1,4567 @@
+{
+  "name": "runcraft",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        -736
+      ],
+      "id": "7971dfe9-10c9-4215-aeec-b9d707b4cd7d",
+      "name": "Telegram Trigger",
+      "webhookId": "7225bc91-7f9b-4203-8349-c2ffdae7cc7c",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.inputTextFromImage ?? $json.inputTextFromChat}}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You extract **user intent** and structured financial data from user input.\nFirst, determine the **intent** of the message:\n* `\"finance_transaction\"` → user is recording a transaction\n* `\"set_budget\"` → user is setting a budget or spending limit\n* `\"unknown\"` → neither applies\n---\n### **Finance transaction rules**\nDetermine whether the text describes a **financial transaction**.\nintent is `finance_transaction` only if **amount, transaction type, and a date** can be inferred.\n`transactionType` has **only two values**:\n* `\"credit\"` → money received\n* `\"debit\"` → money spent\n**Date rules:**\n* If a date is explicitly mentioned, extract it.\n* If no date is mentioned, **use `{{$now}}`**.\n* Treat **“today”** as **`{{$now}}`**.\n* Always use **DD-MM-YYYY** (no time needed).\nIf any transaction field cannot be inferred, return `null`.\n---\n### **Budget rules**\nIf intent is `\"set_budget\"`:\n* Extract the **budget amount**\n* Detect whether the budget is for:\n* a **specific month** (e.g. “June”, “2025-06”), or\n* **overall** (default if not specified)\n* Normalize month to **Month, YYYY**\n* If no month is specified, set `scope` to `\"overall\"`\n* If budget is requested for a specific month, populate the `budget.month` field with **Month, YYYY**\n---\n### **Output**\nOutput **only JSON** in the exact format below:\n```\n{\n \"intent\": \"finance_transaction | set_budget | unknown\",\n \"transaction\": {\n   \"transactionType\": \"credit | debit\",\n   \"amount\": number,\n   \"date\": \"DD-MM-YYYY\",\n   \"invoiceId\": string | null,\n   \"sourceOrReason\": string | null\n },\n \"budget\": {\n   \"amount\": number,\n   \"scope\": \"overall | month\",\n   \"month\": \"Month, YYYY | null\"\n }\n}\n```\n* If intent is `\"finance_transaction\"`, set `budget` field to `null`\n* If intent is `\"set_budget\"`, set `transaction` field to `null`\n* No explanations, no extra text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1536,
+        -752
+      ],
+      "id": "fb68237d-8fd1-4ed1-a845-ac527346ada2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"required\": [\"intent\", \"transaction\", \"budget\"],\n  \"properties\": {\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\"finance_transaction\", \"set_budget\", \"unknown\"]\n    },\n    \"transaction\": {\n      \"type\": [\"object\", \"null\"],\n      \"required\": [\"transactionType\", \"amount\", \"date\"],\n      \"properties\": {\n        \"transactionType\": {\n          \"type\": \"string\",\n          \"enum\": [\"credit\", \"debit\"]\n        },\n        \"amount\": {\n          \"type\": \"number\"\n        },\n        \"date\": {\n          \"type\": \"string\",\n          \"pattern\": \"^\\\\d{2}-\\\\d{2}-\\\\d{4}$\"\n        },\n        \"invoiceId\": {\n          \"type\": [\"string\", \"null\"]\n        },\n        \"sourceOrReason\": {\n          \"type\": [\"string\", \"null\"]\n        }\n      },\n      \"additionalProperties\": false\n    },\n    \"budget\": {\n      \"type\": [\"object\", \"null\"],\n      \"required\": [\"amount\", \"scope\"],\n      \"properties\": {\n        \"amount\": {\n          \"type\": \"number\"\n        },\n        \"scope\": {\n          \"type\": \"string\",\n          \"enum\": [\"overall\", \"month\"]\n        },\n        \"month\": {\n          \"type\": [\"string\", \"null\"],\n          \"pattern\": \"^[A-Za-z]+,\\\\s\\\\d{4}$\"\n        }\n      },\n      \"additionalProperties\": false\n    }\n  },\n  \"additionalProperties\": false\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        -352
+      ],
+      "id": "07628cd9-f954-47af-9503-5bd64809b76a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Transaction Type": "={{ $('Switch1').item.json.output.transaction.transactionType }}",
+            "Date": "={{ $('Switch1').item.json.output.transaction.date }}",
+            "Amount": "={{ $('Switch1').item.json.output.transaction.amount }}",
+            "Invoice Id": "={{ $('Switch1').item.json.output.transaction.invoiceId }}",
+            "Source or Reason": "={{ $('Switch1').item.json.output.transaction.sourceOrReason }}",
+            "Category": "={{ $json.output.category }}",
+            "Sub category": "={{ $json.output.subCategory }}",
+            "Merchant": "={{ $json.output.merchant }}",
+            "Budget bucket": "={{ $json.output.budgetBucket }}",
+            "essentiality": "={{ $json.output.essentiality }}",
+            "Extraction Source": "={{ $json.output.extractionSource }}",
+            "Is recurring candidate": "={{ $json.output.isRecurringCandidate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Transaction Type",
+              "displayName": "Transaction Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice Id",
+              "displayName": "Invoice Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source or Reason",
+              "displayName": "Source or Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sub category",
+              "displayName": "Sub category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Merchant",
+              "displayName": "Merchant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "essentiality",
+              "displayName": "essentiality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget bucket",
+              "displayName": "Budget bucket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Extraction Source",
+              "displayName": "Extraction Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Is recurring candidate",
+              "displayName": "Is recurring candidate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2560,
+        -784
+      ],
+      "id": "f10588ca-bd5d-408e-818e-e24c77e4fe0a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[2].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        -1088
+      ],
+      "id": "9eec9d85-b495-4b31-9ce6-c8c115b97702",
+      "name": "Get a file",
+      "webhookId": "e33f7a45-491d-437f-b9dd-aee20cfe5a0b",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.photo[0].file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "4215127f-def6-47d2-b058-8ba8b78acba5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Handle Picture"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6533ffba-9ee0-41d6-872c-ae948ff6f2ed",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Handle Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        272,
+        -752
+      ],
+      "id": "a1f14c33-e594-496c-bed0-48349df521e4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=You are an OCR + information extraction engine.\n\nAnalyze the provided invoice image and extract relevant details.\n\nExtract only the following fields:\n\ninvoiceNumber\n\ndate\n\ntotalAmount\n\npurpose (why this invoice/image was created, e.g., service, purchase, subscription, tax, etc. with full explaination)\n\nRules:\n\nInfer values if clearly implied in the image.\n\nIf a field is not present or cannot be inferred, return null.\n\nNormalize the date to DD-MM-YYYY if possible.\n",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -1088
+      ],
+      "id": "fa41cb26-ef0b-49b3-9576-4725c091ad20",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "Lm6waQlHHJlFsFdf",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1088,
+        -752
+      ],
+      "id": "8d61ce67-390a-49da-987a-69dbfdd7b2e5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb5a953d-eea2-4ae6-8e43-0ae0a4471edf",
+              "name": "inputTextFromImage",
+              "value": "={{ $json[0].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "9440a2fe-1379-45c6-af59-c50ee7054aa8",
+              "name": "inputTextFromChat",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1312,
+        -752
+      ],
+      "id": "874b3376-9d4f-4c36-9bce-84691ad1b027",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Transaction Added with\nTransaction Type - {{ $json['Transaction Type'] }}\nAmount - {{ $json.Amount }}\nDate - {{ $json.Date }}\nReason - {{ $json['Source or Reason'] }}\nInvoice Id - {{ $('Switch1').item.json.output.transaction.invoiceId }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2816,
+        -496
+      ],
+      "id": "d98155d3-1310-4617-aace-2247a60bf8df",
+      "name": "Send a text message1",
+      "webhookId": "f60d070d-2c40-4421-a1d2-4f5e80269c53",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "finance_transaction",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "24128e24-4237-4aed-b4c8-0fda7f7262c7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Transaction"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "95047f85-0537-47a9-af70-74e239feef7c",
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "set_budget",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Set Budget"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9d86620d-f52f-4ae2-adce-a762aa34ebdc",
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "unknown",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unknown"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1936,
+        -768
+      ],
+      "id": "1e1ca27c-f4b9-469e-929f-6269079188b6",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Didn't quite get your intent. i can only set budget, or record a transaction from your message or invoice image",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2224,
+        208
+      ],
+      "id": "4d1f7c86-e982-49bd-8ed6-ea7cb1e854d8",
+      "name": "Send a text message2",
+      "webhookId": "f60d070d-2c40-4421-a1d2-4f5e80269c53",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Global Key": "OVERALL_MONTHLY_BUDGET",
+            "Global Value": "={{ $json.output.budget.amount }}"
+          },
+          "matchingColumns": [
+            "Global Key"
+          ],
+          "schema": [
+            {
+              "id": "Month",
+              "displayName": "Month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Spent",
+              "displayName": "Spent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Global Key",
+              "displayName": "Global Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Global Value",
+              "displayName": "Global Value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2688,
+        -160
+      ],
+      "id": "0de36514-0de6-402b-8c41-4f9eaa83f935",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=updated the overall monthly budget to {{ $json[\"Global Value\"] }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        -160
+      ],
+      "id": "5fc7c867-7540-4c64-bfdc-59888ada4b35",
+      "name": "Send a text message3",
+      "webhookId": "f60d070d-2c40-4421-a1d2-4f5e80269c53",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.budget.scope }}",
+                    "rightValue": "overall",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "68a3cf45-cbf4-45d1-ae6e-402c8823d630"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Overall Budget"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5c78bb9f-ae5a-4f27-929a-dabb444dae57",
+                    "leftValue": "={{ $json.output.budget.scope }}",
+                    "rightValue": "month",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Specific Month Budget"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        2368,
+        -144
+      ],
+      "id": "4f63564e-39a8-4af0-ab70-85800baba4b4",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Month": "={{ $json.output.budget.month }}",
+            "Budget": "={{ $json.output.budget.amount }}"
+          },
+          "matchingColumns": [
+            "Month"
+          ],
+          "schema": [
+            {
+              "id": "Month",
+              "displayName": "Month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Spent",
+              "displayName": "Spent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Global Key",
+              "displayName": "Global Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Global Value",
+              "displayName": "Global Value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2688,
+        96
+      ],
+      "id": "aa739a3b-7802-41a3-8c9c-67023ef97462",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=updated the monthly budget for {{ $json.Month }} to {{ $json.Budget }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        96
+      ],
+      "id": "aebbc589-166c-4efb-a593-a271bd085c30",
+      "name": "Send a text message4",
+      "webhookId": "f60d070d-2c40-4421-a1d2-4f5e80269c53",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc231282-cc20-42f0-ba26-48afacee3b24",
+              "name": "Date",
+              "value": "={{ DateTime.fromFormat($json.Date, 'dd-MM-yyyy').toFormat('LLLL, yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "edfca198-456c-46ba-a7ce-97e90b6ee1d5",
+              "name": "Amount",
+              "value": "={{ $json.Amount }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        -800
+      ],
+      "id": "9507db7a-f161-4349-b1c0-2c89a71735f0",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8083f424-d546-432b-b8de-3073a088cb8a",
+              "leftValue": "={{ $json[\"Transaction Type\"] }}",
+              "rightValue": "debit",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2752,
+        -784
+      ],
+      "id": "7ce89bb3-9116-4918-8d4d-c50a311327f0",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Month",
+              "lookupValue": "={{ $json.Date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3104,
+        -800
+      ],
+      "id": "2b5d24ea-cc36-4493-8594-c851141d205f",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Month": "={{ $('Edit Fields1').item.json.Date }}",
+            "Spent": "={{$('Edit Fields1').item.json.Amount + ($json.Spent ? $json.Spent : 0) }}"
+          },
+          "matchingColumns": [
+            "Month"
+          ],
+          "schema": [
+            {
+              "id": "Month",
+              "displayName": "Month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Spent",
+              "displayName": "Spent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Global Key",
+              "displayName": "Global Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Global Value",
+              "displayName": "Global Value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3280,
+        -800
+      ],
+      "id": "0fcb06f9-750b-418c-814c-60eb260f8571",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        224
+      ],
+      "id": "281a13f0-cd75-4d56-912e-94948c3848e6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Global Key",
+              "lookupValue": "OVERALL_MONTHLY_BUDGET"
+            },
+            {
+              "lookupColumn": "Month",
+              "lookupValue": "={{ $json.Month }}, {{ $json.Year }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        224
+      ],
+      "id": "b3d08c8b-7c69-4af4-893e-4346576b54bb",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        448,
+        240
+      ],
+      "id": "1ade6d74-d8d4-4173-a843-12590503d7d5",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b836499-7548-46f7-a06f-c79f647e8eac",
+              "name": "Budget",
+              "value": "={{ $json.data[1].Budget || $json.data[0][\"Global Value\"] }}",
+              "type": "number"
+            },
+            {
+              "id": "74136a0f-2d00-473f-8fa4-5482c5fcc687",
+              "name": "Spent",
+              "value": "={{ $json.data[1].Spent }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        224
+      ],
+      "id": "35d08444-1715-41c5-9dff-9c7ae723db80",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76d1f25a-941c-43a1-a291-8c8b1f778083",
+              "leftValue": "={{ $json.Budget * 0.9 < $json.Spent }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        224
+      ],
+      "id": "c970a44b-94b8-490c-b155-b8e09238312e",
+      "name": "If Spent > 90% of Budget"
+    },
+    {
+      "parameters": {
+        "chatId": "=6591219191",
+        "text": "=You have spent more than 90% of this month's budget, slow down Gates.\nBudget - {{ $json.Budget }}\nSpent - {{ $json.Spent }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        208
+      ],
+      "id": "16d0d2c0-5976-4408-ad32-6b8757e9a551",
+      "name": "Send a text message5",
+      "webhookId": "f60d070d-2c40-4421-a1d2-4f5e80269c53",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "29c39345-4795-477e-83f8-0ce20254e10e",
+              "leftValue": "={{ $json.message.from.id }}",
+              "rightValue": 6591219191,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        -736
+      ],
+      "id": "4de38a4b-bbe0-4c70-a1e0-173001421456",
+      "name": "Authenticate Chat ID"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Sorry mate, this is a private bot",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        -336
+      ],
+      "id": "61878a24-145a-4327-84f5-ec00a0fae42c",
+      "name": "Send a text message | Unknown Chat",
+      "webhookId": "f8ac5822-c727-4dd1-8338-537944224bae",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Daily Check for Budget"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "79af4d71-d3da-450d-bf60-3bf09afa491d",
+      "name": "Sticky Note",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Handling Invoice Image",
+        "height": 240,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        -1376
+      ],
+      "typeVersion": 1,
+      "id": "2e831473-eafd-4586-bc6e-dcd1af6f4fef",
+      "name": "Sticky Note1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Make sure to work for only specific User"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -864
+      ],
+      "typeVersion": 1,
+      "id": "5b84dce5-35ca-49b6-95ce-71aab81b5691",
+      "name": "Sticky Note2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Set Overall Budget"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2624,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "d1775530-4c76-4c0e-81ec-125b1eb852b7",
+      "name": "Sticky Note3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Set Specific Month's Budget"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2800,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "758e201a-d0d2-4abf-82f6-3a21c70da569",
+      "name": "Sticky Note4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Record Transactions"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2480,
+        -880
+      ],
+      "typeVersion": 1,
+      "id": "46175e48-43c0-46b0-9c03-a4d887445a81",
+      "name": "Sticky Note5",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Brain\n## Anaalyse user input and infer intent",
+        "height": 192,
+        "width": 256,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1520,
+        -944
+      ],
+      "typeVersion": 1,
+      "id": "7170b395-5559-4df5-b481-d0c08c6307bd",
+      "name": "Sticky Note6",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Track Total Spendings"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3216,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "fd482cc5-f11c-4765-97a5-421335cabb89",
+      "name": "Sticky Note7",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Important\n\n## Change the chat id here",
+        "height": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "9e875ded-ae11-4b15-b678-ab2bc15b620d",
+      "name": "Sticky Note8",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Important\n\n## Change the chat id here",
+        "height": 176,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "c5dfc43c-25e8-4c29-be89-57432d3109e3",
+      "name": "Sticky Note9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1392,
+        -384
+      ],
+      "id": "649cee57-356a-4569-a5be-10c5abf97f74",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Lm6waQlHHJlFsFdf",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You enrich a single transaction with classification fields for downstream insights.\n\nInput fields you will receive:\n- transactionType: credit|debit\n- amount: number\n- date: DD-MM-YYYY\n- invoiceId: string|null\n- sourceOrReason: string|null\n- extractionSource: \"text\" | \"invoice\"\n\nTasks:\n1) category: choose ONE from:\n   Food, Transport, Bills, Shopping, Health, Entertainment, Savings, Income, Education, Housing, Utilities, Debt, Other\n2) subCategory: short free text (e.g. \"Fast food\", \"Bike repair\", \"EMI\", \"Groceries\")\n3) merchant: infer if clearly present, else null\n4) essentiality: one of essential | discretionary | ambiguous\n5) budgetBucket: one of Needs | Wants | Savings\n6) isRecurringCandidate: true if it looks like it repeats monthly (e.g. emi, rent, subscription, utilities) otherwise false\n7) extractionSource: must echo the input exactly (\"text\" or \"invoice\")\n\nRules:\n- Be conservative. If unsure, choose category=\"Other\", essentiality=\"ambiguous\", merchant=null.\n- Output ONLY JSON. No extra text.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2208,
+        -784
+      ],
+      "id": "050eb4fd-906a-4ea3-89e2-5363f1c9df5a",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"required\": [\n    \"category\",\n    \"subCategory\",\n    \"merchant\",\n    \"essentiality\",\n    \"budgetBucket\",\n    \"extractionSource\",\n    \"isRecurringCandidate\"\n  ],\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"Food\",\n        \"Transport\",\n        \"Bills\",\n        \"Shopping\",\n        \"Health\",\n        \"Entertainment\",\n        \"Savings\",\n        \"Income\",\n        \"Education\",\n        \"Housing\",\n        \"Utilities\",\n        \"Debt\",\n        \"Other\"\n      ]\n    },\n    \"subCategory\": { \"type\": \"string\" },\n    \"merchant\": { \"type\": [\"string\", \"null\"] },\n    \"essentiality\": {\n      \"type\": \"string\",\n      \"enum\": [\"essential\", \"discretionary\", \"ambiguous\"]\n    },\n    \"budgetBucket\": {\n      \"type\": \"string\",\n      \"enum\": [\"Needs\", \"Wants\", \"Savings\"]\n    },\n    \"extractionSource\": {\n      \"type\": \"string\",\n      \"enum\": [\"text\", \"invoice\"]\n    },\n    \"isRecurringCandidate\": { \"type\": \"boolean\" }\n  },\n  \"additionalProperties\": false\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2416,
+        -480
+      ],
+      "id": "11b71883-402b-4465-bac6-ab53398ff54a",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2048,
+        -896
+      ],
+      "id": "982334b9-f9df-49e9-af00-f82556feac03",
+      "name": "10 secs",
+      "webhookId": "03a66f67-2239-4ba6-987d-c7bd53f403ee"
+    },
+    {
+      "parameters": {
+        "name": "data",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1O3NM2J0EIlAX2n2d-DSYTUJvZ33dXIEk",
+          "mode": "list",
+          "cachedResultName": "Invoices Billy",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1O3NM2J0EIlAX2n2d-DSYTUJvZ33dXIEk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        848,
+        -1328
+      ],
+      "id": "c5eae5b4-362b-4eb2-a431-b2a97eea7111",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GxuodILjJZQrcCk5",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        512
+      ],
+      "id": "9411e4bd-bd37-4d4f-bf15-86d0888c3263",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a0d09fc-24c9-4f11-96ca-bfce25d9144b",
+              "name": "MonthKey",
+              "value": "=={{ $now.toFormat('LLLL, yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "7c18ef84-c06c-4d5e-a6de-0b2e868a2c91",
+              "name": "Year",
+              "value": "={{ $json.Year }}",
+              "type": "string"
+            },
+            {
+              "id": "d551b544-b4a7-4d08-a329-4912c1e7dbc2",
+              "name": "MonthNumber",
+              "value": "=={{ $now.month }}",
+              "type": "string"
+            },
+            {
+              "id": "7f81b8d5-cc22-468a-b4b4-9893382687a6",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        512
+      ],
+      "id": "9b797ae2-68e4-4348-8fb7-6c2ac786751a",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 268647199,
+          "mode": "list",
+          "cachedResultName": "Monthly Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=268647199"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Global Key",
+              "lookupValue": "OVERALL_MONTHLY_BUDGET"
+            },
+            {
+              "lookupColumn": "Month",
+              "lookupValue": "={{ $json.MonthKey }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        464,
+        512
+      ],
+      "id": "51390455-341e-47f2-b7e3-7e83526f533a",
+      "name": "Get row(s) in sheet2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Expects items from Google Sheets \"Monthly Data\" (Node 3)\n// It may return a row with Global Key = OVERALL_MONTHLY_BUDGET (Global Value)\n// and/or a row with Month = \"January, 2026\" (Budget)\n\nlet globalBudget = null;\nlet monthBudget = null;\n\nfor (const item of $input.all()) {\n  const r = item.json;\n\n  // Month-specific budget row\n  if (r.Month && r.Budget !== undefined && r.Budget !== null && String(r.Budget).trim() !== \"\") {\n    monthBudget = Number(r.Budget);\n  }\n\n  // Global budget row\n  if (r[\"Global Key\"] === \"OVERALL_MONTHLY_BUDGET\" && r[\"Global Value\"] !== undefined) {\n    globalBudget = Number(r[\"Global Value\"]);\n  }\n}\n\nconst budget = Number.isFinite(monthBudget) && monthBudget > 0\n  ? monthBudget\n  : (Number.isFinite(globalBudget) && globalBudget > 0 ? globalBudget : 0);\n\nreturn [\n  {\n    json: {\n      budget,\n      budgetSource: Number.isFinite(monthBudget) && monthBudget > 0 ? \"month\" : \"global\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        512
+      ],
+      "id": "624ff326-527d-408c-9d73-fdca4525ee43",
+      "name": "Resolve Budget"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Ledger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Transaction Type",
+              "lookupValue": "debit"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        512
+      ],
+      "id": "52e607de-e463-44ce-a980-7783fa0d31b1",
+      "name": "Get row(s) in sheet3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs:\n// - Node 4 provides: { budget, budgetSource } as the FIRST input item\n// - Node 5 provides debit transaction rows as subsequent input items\n//\n// IMPORTANT: Ensure your workflow wiring is:\n// Node 4 -> Node 5 -> Node 6 (so Node 6 receives BOTH budget + transactions)\n// If you can’t easily wire both into Node 6, use a Merge node. But you asked for 8 nodes,\n// so we'll assume Node 6 receives budget via $node[] access.\n\nfunction parseDDMMYYYY(s) {\n  if (!s || typeof s !== \"string\") return null;\n  const parts = s.split(\"-\");\n  if (parts.length !== 3) return null;\n  const dd = parseInt(parts[0], 10);\n  const mm = parseInt(parts[1], 10);\n  const yyyy = parseInt(parts[2], 10);\n  if (!dd || !mm || !yyyy) return null;\n  return new Date(yyyy, mm - 1, dd);\n}\n\nfunction monthKeyFromDate(d) {\n  const month = d.toLocaleString(\"en-US\", { month: \"long\" });\n  return `${month}, ${d.getFullYear()}`;\n}\n\n// Pull budget from Node 4 reliably\nconst budget = Number($node[\"Resolve Budget\"].json.budget || 0);\n\nconst now = new Date();\nconst currentMonthKey = monthKeyFromDate(now);\n\n// Month boundaries\nconst daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();\nconst daysElapsed = now.getDate(); // includes today\nconst timeRatio = daysInMonth > 0 ? daysElapsed / daysInMonth : 0;\n\n// Transactions from Node 5 (this code node input)\nconst txRows = $input.all().map(i => i.json);\n\n// Keep only current month debit rows (Node 5 already filtered debit, but we’ll be safe)\nconst monthRows = txRows.filter(r => {\n  const dt = parseDDMMYYYY(r[\"Date\"]);\n  if (!dt) return false;\n  const isCurrentMonth = monthKeyFromDate(dt) === currentMonthKey;\n  const isDebit = (r[\"Transaction Type\"] || \"\").toLowerCase() === \"debit\";\n  return isCurrentMonth && isDebit;\n});\n\n// Sum spent\nconst spent = monthRows.reduce((sum, r) => sum + (Number(r[\"Amount\"]) || 0), 0);\n\n// Pace metrics\nconst spendRatio = budget > 0 ? spent / budget : 0;\nconst expectedSpentSafe = budget * timeRatio;\nconst overSafeBy = spent - expectedSpentSafe;\n\n// Projection (avoid insane projection in first couple days)\nconst projectedMonthEnd =\n  timeRatio >= 0.10 ? (spent / timeRatio) : spent;\n\nconst projectedOverPct =\n  budget > 0 ? (projectedMonthEnd - budget) / budget : 0;\n\n// Discretionary candidates (uses your enrichment column \"essentiality\")\nconst discretionary = monthRows\n  .filter(r => String(r[\"essentiality\"] || r[\"Essentiality\"] || \"\").toLowerCase() === \"discretionary\")\n  .map(r => ({\n    amount: Number(r[\"Amount\"]) || 0,\n    merchant: r[\"Merchant\"] || null,\n    category: r[\"category\"] || r[\"Category\"] || \"Other\",\n    subCategory: r[\"Sub category\"] || r[\"Sub Category\"] || r[\"sub_category\"] || null,\n    reason: r[\"Source or Reason\"] || \"\"\n  }))\n  .sort((a, b) => b.amount - a.amount)\n  .slice(0, 3);\n\n// Decide if we should notify\nconst shouldNotify =\n  (spendRatio >= 0.55 && daysElapsed <= 10) ||\n  (overSafeBy > 0 && projectedOverPct >= 0.20) ||\n  (overSafeBy >= budget * 0.05);\n\n// How much user should cut to return to safe pace\nconst cutTarget = Math.max(0, overSafeBy);\n\n// Build a deterministic message (AI node can refine later)\nlet adviceLines = [];\nif (discretionary.length) {\n  adviceLines.push(\"Start with these discretionary spends:\");\n  discretionary.forEach((d, idx) => {\n    const label = d.merchant || d.subCategory || d.category;\n    adviceLines.push(`${idx + 1}) ₦${Math.round(d.amount)} — ${label}${d.reason ? ` (${d.reason})` : \"\"}`);\n  });\n} else {\n  adviceLines.push(\"Tip: Reduce discretionary spending for the rest of the week to get back on track.\");\n}\n\nconst messageDraft =\n  `Pace check (${currentMonthKey})\\n` +\n  `Budget: ₦${Math.round(budget)}\\n` +\n  `Spent: ₦${Math.round(spent)} (${Math.round(spendRatio * 100)}%) in ${daysElapsed} days\\n\\n` +\n  `Safe pace by today: ₦${Math.round(expectedSpentSafe)}\\n` +\n  `Over safe pace: ₦${Math.round(Math.max(0, overSafeBy))}\\n` +\n  `At this pace, projected overshoot: ~${Math.round(Math.max(0, projectedOverPct) * 100)}%\\n\\n` +\n  `Action: Cut ~₦${Math.round(cutTarget)} from discretionary spending.\\n` +\n  adviceLines.join(\"\\n\");\n\nreturn [\n  {\n    json: {\n      monthKey: currentMonthKey,\n      budget,\n      spent,\n      daysElapsed,\n      daysInMonth,\n      timeRatio,\n      spendRatio,\n      expectedSpentSafe,\n      overSafeBy,\n      projectedMonthEnd,\n      projectedOverPct,\n      cutTarget,\n      discretionary,\n      shouldNotify,\n      messageDraft\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        512
+      ],
+      "id": "0c0721b9-3812-4dfb-850b-30036c3d2ae0",
+      "name": "Compute Pace + Advice Candidates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "051e9dd2-78bb-4d46-9998-ec512ae09009",
+              "leftValue": "={{ $json.shouldNotify }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "0ce08c75-1afe-44ab-ae97-88d66994d92d",
+              "leftValue": "={{ $json.shouldNotify }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        512
+      ],
+      "id": "2005292b-cc7e-418e-9925-d528565b7ed4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a budgeting coach. Convert the provided pace metrics into a short Telegram message.\n\nRules:\n- Keep it under 900 characters.\n- Use Naira symbol ₦.\n- Must include:\n  1) what happened (spent %, days)\n  2) what it means (projected overshoot %)\n  3) what to do now (cut target + 1–2 concrete examples)\n- Do not shame the user. Keep it direct.\n- Output ONLY the final message text. No markdown.\n",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.messageDraft }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        528
+      ],
+      "id": "eb693cb8-ca01-4b5e-ac5b-ab23878e529d",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cMEhTvkMVqGMgtRy",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6591219191",
+        "text": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        544
+      ],
+      "id": "76e53445-5e4b-47c8-b3ad-b52450ec15a1",
+      "name": "Send a text message",
+      "webhookId": "894d873e-9910-4924-aaa3-ae9affb8b314",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a0d09fc-24c9-4f11-96ca-bfce25d9144b",
+              "name": "MonthKey",
+              "value": "=={{ $now.toFormat('LLLL, yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "7c18ef84-c06c-4d5e-a6de-0b2e868a2c91",
+              "name": "Year",
+              "value": "={{ $json.Year }}",
+              "type": "string"
+            },
+            {
+              "id": "d551b544-b4a7-4d08-a329-4912c1e7dbc2",
+              "name": "MonthNumber",
+              "value": "=={{ $now.month }}",
+              "type": "string"
+            },
+            {
+              "id": "7f81b8d5-cc22-468a-b4b4-9893382687a6",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        832
+      ],
+      "id": "7a89b4d9-c1df-4dee-a457-8b0facf64f42",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1565760874,
+          "mode": "list",
+          "cachedResultName": "Simulation 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=1565760874"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Global Key",
+              "lookupValue": "OVERALL_MONTHLY_BUDGET"
+            },
+            {
+              "lookupColumn": "Month",
+              "lookupValue": "={{ $json.MonthKey }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        832
+      ],
+      "id": "47cf2ce6-a3e7-41ab-a270-6d86ad600499",
+      "name": "Get row(s) in sheet4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Expects items from Google Sheets \"Monthly Data\" (Node 3)\n// It may return a row with Global Key = OVERALL_MONTHLY_BUDGET (Global Value)\n// and/or a row with Month = \"January, 2026\" (Budget)\n\nlet globalBudget = null;\nlet monthBudget = null;\n\nfor (const item of $input.all()) {\n  const r = item.json;\n\n  // Month-specific budget row\n  if (r.Month && r.Budget !== undefined && r.Budget !== null && String(r.Budget).trim() !== \"\") {\n    monthBudget = Number(r.Budget);\n  }\n\n  // Global budget row\n  if (r[\"Global Key\"] === \"OVERALL_MONTHLY_BUDGET\" && r[\"Global Value\"] !== undefined) {\n    globalBudget = Number(r[\"Global Value\"]);\n  }\n}\n\nconst budget = Number.isFinite(monthBudget) && monthBudget > 0\n  ? monthBudget\n  : (Number.isFinite(globalBudget) && globalBudget > 0 ? globalBudget : 0);\n\nreturn [\n  {\n    json: {\n      budget,\n      budgetSource: Number.isFinite(monthBudget) && monthBudget > 0 ? \"month\" : \"global\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        832
+      ],
+      "id": "b8c14543-ca3e-4c02-91e0-a38a7b0ca1bf",
+      "name": "Resolve Budget1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0",
+          "mode": "list",
+          "cachedResultName": "Billy Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1104316970,
+          "mode": "list",
+          "cachedResultName": "Simulation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JMyBGlaQyu5JO7RH7EyJP0dgBE7xi8pgEn6jjbYLTL0/edit#gid=1104316970"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Transaction Type",
+              "lookupValue": "debit"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        832
+      ],
+      "id": "30d6e98a-f2e4-412f-90b4-9cb476cc24a6",
+      "name": "Get row(s) in sheet5",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fL8d75XFjQIPTXO2",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs:\n// - Node 4 provides: { budget, budgetSource } as the FIRST input item\n// - Node 5 provides debit transaction rows as subsequent input items\n//\n// IMPORTANT: Ensure your workflow wiring is:\n// Node 4 -> Node 5 -> Node 6 (so Node 6 receives BOTH budget + transactions)\n// If you can’t easily wire both into Node 6, use a Merge node. But you asked for 8 nodes,\n// so we'll assume Node 6 receives budget via $node[] access.\n\nfunction parseDDMMYYYY(s) {\n  if (!s || typeof s !== \"string\") return null;\n  const parts = s.split(\"-\");\n  if (parts.length !== 3) return null;\n  const dd = parseInt(parts[0], 10);\n  const mm = parseInt(parts[1], 10);\n  const yyyy = parseInt(parts[2], 10);\n  if (!dd || !mm || !yyyy) return null;\n  return new Date(yyyy, mm - 1, dd);\n}\n\nfunction monthKeyFromDate(d) {\n  const month = d.toLocaleString(\"en-US\", { month: \"long\" });\n  return `${month}, ${d.getFullYear()}`;\n}\n\n// Pull budget from Node 4 reliably\nconst budget = Number($node[\"Resolve Budget1\"].json.budget || 0);\n\nconst now = new Date();\nconst currentMonthKey = monthKeyFromDate(now);\n\n// Month boundaries\nconst daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();\nconst daysElapsed = now.getDate(); // includes today\nconst timeRatio = daysInMonth > 0 ? daysElapsed / daysInMonth : 0;\n\n// Transactions from Node 5 (this code node input)\nconst txRows = $input.all().map(i => i.json);\n\n// Keep only current month debit rows (Node 5 already filtered debit, but we’ll be safe)\nconst monthRows = txRows.filter(r => {\n  const dt = parseDDMMYYYY(r[\"Date\"]);\n  if (!dt) return false;\n  const isCurrentMonth = monthKeyFromDate(dt) === currentMonthKey;\n  const isDebit = (r[\"Transaction Type\"] || \"\").toLowerCase() === \"debit\";\n  return isCurrentMonth && isDebit;\n});\n\n// Sum spent\nconst spent = monthRows.reduce((sum, r) => sum + (Number(r[\"Amount\"]) || 0), 0);\n\n// Pace metrics\nconst spendRatio = budget > 0 ? spent / budget : 0;\nconst expectedSpentSafe = budget * timeRatio;\nconst overSafeBy = spent - expectedSpentSafe;\n\n// Projection (avoid insane projection in first couple days)\nconst projectedMonthEnd =\n  timeRatio >= 0.10 ? (spent / timeRatio) : spent;\n\nconst projectedOverPct =\n  budget > 0 ? (projectedMonthEnd - budget) / budget : 0;\n\n// Discretionary candidates (uses your enrichment column \"essentiality\")\nconst discretionary = monthRows\n  .filter(r => String(r[\"essentiality\"] || r[\"Essentiality\"] || \"\").toLowerCase() === \"discretionary\")\n  .map(r => ({\n    amount: Number(r[\"Amount\"]) || 0,\n    merchant: r[\"Merchant\"] || null,\n    category: r[\"category\"] || r[\"Category\"] || \"Other\",\n    subCategory: r[\"Sub category\"] || r[\"Sub Category\"] || r[\"sub_category\"] || null,\n    reason: r[\"Source or Reason\"] || \"\"\n  }))\n  .sort((a, b) => b.amount - a.amount)\n  .slice(0, 3);\n\n// Decide if we should notify\nconst shouldNotify =\n  (spendRatio >= 0.55 && daysElapsed <= 10) ||\n  (overSafeBy > 0 && projectedOverPct >= 0.20) ||\n  (overSafeBy >= budget * 0.05);\n\n// How much user should cut to return to safe pace\nconst cutTarget = Math.max(0, overSafeBy);\n\n// Build a deterministic message (AI node can refine later)\nlet adviceLines = [];\nif (discretionary.length) {\n  adviceLines.push(\"Start with these discretionary spends:\");\n  discretionary.forEach((d, idx) => {\n    const label = d.merchant || d.subCategory || d.category;\n    adviceLines.push(`${idx + 1}) ₦${Math.round(d.amount)} — ${label}${d.reason ? ` (${d.reason})` : \"\"}`);\n  });\n} else {\n  adviceLines.push(\"Tip: Reduce discretionary spending for the rest of the week to get back on track.\");\n}\n\nconst messageDraft =\n  `Pace check (${currentMonthKey})\\n` +\n  `Budget: ₦${Math.round(budget)}\\n` +\n  `Spent: ₦${Math.round(spent)} (${Math.round(spendRatio * 100)}%) in ${daysElapsed} days\\n\\n` +\n  `Safe pace by today: ₦${Math.round(expectedSpentSafe)}\\n` +\n  `Over safe pace: ₦${Math.round(Math.max(0, overSafeBy))}\\n` +\n  `At this pace, projected overshoot: ~${Math.round(Math.max(0, projectedOverPct) * 100)}%\\n\\n` +\n  `Action: Cut ~₦${Math.round(cutTarget)} from discretionary spending.\\n` +\n  adviceLines.join(\"\\n\");\n\nreturn [\n  {\n    json: {\n      monthKey: currentMonthKey,\n      budget,\n      spent,\n      daysElapsed,\n      daysInMonth,\n      timeRatio,\n      spendRatio,\n      expectedSpentSafe,\n      overSafeBy,\n      projectedMonthEnd,\n      projectedOverPct,\n      cutTarget,\n      discretionary,\n      shouldNotify,\n      messageDraft\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        832
+      ],
+      "id": "6b37fbc5-f50c-4a2d-b44e-69ddcc0d7a94",
+      "name": "Compute Pace + Advice Candidates1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "051e9dd2-78bb-4d46-9998-ec512ae09009",
+              "leftValue": "={{ $json.shouldNotify }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "0ce08c75-1afe-44ab-ae97-88d66994d92d",
+              "leftValue": "={{ $json.shouldNotify }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        832
+      ],
+      "id": "1d5863fd-c859-4d05-b591-04fedc26116d",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a calm, practical financial coaching agent.\n\nYour job is to turn spending pace metrics into a short Telegram message that helps\nthe user correct course without panic, blame, or overwhelm.\n\nYou do NOT perform calculations.\nAll numbers provided are already correct.\n\n====================\nDECISION GUIDELINES\n====================\n\n- When spending is on track:\n  • Reassure the user\n  • Mention projected month-end spend\n  • Encourage mindful continuation\n  • Do NOT suggest cuts\n\n- When spending is slightly off track:\n  • Signal risk early\n  • Encourage awareness\n  • Suggest light restraint on discretionary spending\n\n- When spending is significantly off track (projectedOverPct ≥ 0.20):\n  • Clearly explain the risk in plain language\n  • Reference the projected overshoot (rounded %)\n  • Recommend a concrete cutTarget\n  • Mention up to 3 discretionary examples provided\n  • Emphasize that small changes now can still help\n\n====================\nLANGUAGE & TONE RULES\n====================\n\n- Sound like a supportive coach, not a report\n- Use clear, simple sentences\n- Avoid technical or academic phrasing\n- Avoid judgmental words (e.g. “failure”, “irresponsible”)\n- Avoid permissive phrasing (e.g. “spend freely”, “no limits”)\n- Be firm but calm\n\n====================\nMESSAGE STRUCTURE\n====================\n\n1) What happened (pace summary)\n2) What it means (plain-language interpretation)\n3) What to do now (clear, achievable action)\n\n====================\nFORMAT RULES\n====================\n\n- Max 900 characters\n- Use ₦ for currency\n- Do NOT mention internal metric names\n- Do NOT mention AI, models, or calculations\n- No markdown, no bullet points, no headings\n\n====================\nOUTPUT\n====================\n\nOutput ONLY the final Telegram message text.\n",
+              "role": "model"
+            },
+            {
+              "content": "=Write the final Telegram message from this JSON.\n\nUse:\n- monthKey, budget, spent, daysElapsed\n- expectedSpentSafe, overSafeBy\n- projectedOverPct (as a %)\n- cutTarget\n- discretionary (use up to 3 examples)\n\nJSON:\n{{ JSON.stringify($json, null, 2) }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        768
+      ],
+      "id": "2c6c2b36-0315-4a0c-8198-9a62a9f19dfc",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cMEhTvkMVqGMgtRy",
+          "name": "Emmanuel"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6591219191",
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1936,
+        880
+      ],
+      "id": "00de9117-de60-471b-b3a1-6e40c0e58509",
+      "name": "Send a text message6",
+      "webhookId": "894d873e-9910-4924-aaa3-ae9affb8b314",
+      "credentials": {
+        "telegramApi": {
+          "id": "EYTcX3MQAkkWZ6CT",
+          "name": "BillsBilly"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write the final Telegram message from this JSON.\n\nUse:\n- monthKey, budget, spent, daysElapsed\n- expectedSpentSafe, overSafeBy\n- projectedOverPct (as a %)\n- cutTarget\n- discretionary (use up to 3 examples)\n\nJSON:\n{{ JSON.stringify($json, null, 2) }}\n"
+            },
+            {
+              "role": "system",
+              "content": "=You are a calm, practical financial coaching agent.\n\nYour job is to turn spending pace metrics into a short Telegram message that helps\nthe user correct course without panic, blame, or overwhelm.\n\nYou do NOT perform calculations.\nAll numbers provided are already correct.\n\n====================\nDECISION GUIDELINES\n====================\n\n- When spending is on track:\n  • Reassure the user\n  • Mention projected month-end spend\n  • Encourage mindful continuation\n  • Do NOT suggest cuts\n\n- When spending is slightly off track:\n  • Signal risk early\n  • Encourage awareness\n  • Suggest light restraint on discretionary spending\n\n- When spending is significantly off track (projectedOverPct ≥ 0.20):\n  • Clearly explain the risk in plain language\n  • Reference the projected overshoot (rounded %)\n  • Recommend a concrete cutTarget\n  • Mention up to 3 discretionary examples provided\n  • Emphasize that small changes now can still help\n\n====================\nLANGUAGE & TONE RULES\n====================\n\n- Sound like a supportive coach, not a report\n- Use clear, simple sentences\n- Avoid technical or academic phrasing\n- Avoid judgmental words (e.g. “failure”, “irresponsible”)\n- Avoid permissive phrasing (e.g. “spend freely”, “no limits”)\n- Be firm but calm\n\n====================\nMESSAGE STRUCTURE\n====================\n\n1) What happened (pace summary)\n2) What it means (plain-language interpretation)\n3) What to do now (clear, achievable action)\n\n====================\nFORMAT RULES\n====================\n\n- Max 900 characters\n- Use ₦ for currency\n- Do NOT mention internal metric names\n- Do NOT mention AI, models, or calculations\n- No markdown, no bullet points, no headings\n\n====================\nOUTPUT\n====================\n\nOutput ONLY the final Telegram message text.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        1056
+      ],
+      "id": "033dda06-9cbc-4673-ac90-017c8a61c7da",
+      "name": "Message a model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Lm6waQlHHJlFsFdf",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Edit Fields1": [
+      {
+        "json": {
+          "Date": "January, 2026",
+          "Amount": 50000
+        }
+      }
+    ],
+    "AI Agent": [
+      {
+        "json": {
+          "output": {
+            "intent": "finance_transaction",
+            "transaction": {
+              "transactionType": "debit",
+              "amount": 84000,
+              "date": "14-01-2026",
+              "invoiceId": "0000007",
+              "sourceOrReason": "restaurant dining services"
+            },
+            "budget": null
+          }
+        }
+      }
+    ],
+    "Append row in sheet": [
+      {
+        "json": {
+          "Transaction Type": "debit",
+          "Date": "14-01-2026",
+          "Amount": 84000,
+          "Invoice Id": "0000007",
+          "Source or Reason": "restaurant dining services",
+          "Category": "Food",
+          "Sub category": "Restaurant dining",
+          "Budget bucket": "Wants",
+          "essentiality": "discretionary",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      }
+    ],
+    "AI Agent1": [
+      {
+        "json": {
+          "output": {
+            "category": "Food",
+            "subCategory": "Restaurant dining",
+            "merchant": null,
+            "essentiality": "discretionary",
+            "budgetBucket": "Wants",
+            "extractionSource": "text",
+            "isRecurringCandidate": false
+          }
+        }
+      }
+    ],
+    "Get row(s) in sheet5": [
+      {
+        "json": {
+          "row_number": 3,
+          "Transaction Type": "debit",
+          "Date": "01-09-2025",
+          "Amount": 180000,
+          "Invoice Id": "",
+          "Source or Reason": "rent contribution",
+          "Category": "Housing",
+          "Sub category": "Rent",
+          "Merchant": "Landlord",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 4,
+          "Transaction Type": "debit",
+          "Date": "02-09-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "nepa token top up",
+          "Category": "Utilities",
+          "Sub category": "Electricity",
+          "Merchant": "Ikeja Electric",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 5,
+          "Transaction Type": "debit",
+          "Date": "02-09-2025",
+          "Amount": 5000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime top up",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 6,
+          "Transaction Type": "debit",
+          "Date": "03-09-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "data subscription",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "Airtel",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 7,
+          "Transaction Type": "debit",
+          "Date": "03-09-2025",
+          "Amount": 8500,
+          "Invoice Id": "",
+          "Source or Reason": "transport to work",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 8,
+          "Transaction Type": "debit",
+          "Date": "04-09-2025",
+          "Amount": 42000,
+          "Invoice Id": "",
+          "Source or Reason": "groceries",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Shoprite",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 9,
+          "Transaction Type": "debit",
+          "Date": "05-09-2025",
+          "Amount": 7000,
+          "Invoice Id": "",
+          "Source or Reason": "lunch",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "Mr Bigg's",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 10,
+          "Transaction Type": "debit",
+          "Date": "06-09-2025",
+          "Amount": 2500,
+          "Invoice Id": "",
+          "Source or Reason": "soft drink and snack",
+          "Category": "Food",
+          "Sub category": "Snacks",
+          "Merchant": "Supermart",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 11,
+          "Transaction Type": "debit",
+          "Date": "07-09-2025",
+          "Amount": 35000,
+          "Invoice Id": "",
+          "Source or Reason": "sunday offering",
+          "Category": "Savings",
+          "Sub category": "Charity/Donations",
+          "Merchant": "Church",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 12,
+          "Transaction Type": "debit",
+          "Date": "08-09-2025",
+          "Amount": 22000,
+          "Invoice Id": "",
+          "Source or Reason": "fuel for generator",
+          "Category": "Utilities",
+          "Sub category": "Fuel",
+          "Merchant": "NNPC",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 13,
+          "Transaction Type": "debit",
+          "Date": "09-09-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "household toiletries",
+          "Category": "Shopping",
+          "Sub category": "Household Supplies",
+          "Merchant": "Spar",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 15,
+          "Transaction Type": "debit",
+          "Date": "10-09-2025",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "phone accessories",
+          "Category": "Shopping",
+          "Sub category": "Electronics Accessories",
+          "Merchant": "Computer Village",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 16,
+          "Transaction Type": "debit",
+          "Date": "11-09-2025",
+          "Amount": 9500,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Uber",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 17,
+          "Transaction Type": "debit",
+          "Date": "12-09-2025",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "haircut and grooming",
+          "Category": "Health",
+          "Sub category": "Personal Care",
+          "Merchant": "Barber",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 18,
+          "Transaction Type": "debit",
+          "Date": "13-09-2025",
+          "Amount": 62000,
+          "Invoice Id": "INV-0901",
+          "Source or Reason": "medical checkup",
+          "Category": "Health",
+          "Sub category": "Clinic Visit",
+          "Merchant": "Lagos Clinic",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 19,
+          "Transaction Type": "debit",
+          "Date": "14-09-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "wifi subscription",
+          "Category": "Utilities",
+          "Sub category": "Home Internet",
+          "Merchant": "Spectranet",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 20,
+          "Transaction Type": "debit",
+          "Date": "15-09-2025",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "netflix subscription",
+          "Category": "Entertainment",
+          "Sub category": "Streaming",
+          "Merchant": "Netflix",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 21,
+          "Transaction Type": "debit",
+          "Date": "16-09-2025",
+          "Amount": 21500,
+          "Invoice Id": "",
+          "Source or Reason": "foodstuff (market)",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Mile 12 Market",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 22,
+          "Transaction Type": "debit",
+          "Date": "18-09-2025",
+          "Amount": 4000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "Glo",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 23,
+          "Transaction Type": "debit",
+          "Date": "19-09-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "data",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 24,
+          "Transaction Type": "debit",
+          "Date": "20-09-2025",
+          "Amount": 9200,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 25,
+          "Transaction Type": "debit",
+          "Date": "22-09-2025",
+          "Amount": 55000,
+          "Invoice Id": "INV-0922",
+          "Source or Reason": "car service",
+          "Category": "Transport",
+          "Sub category": "Vehicle Maintenance",
+          "Merchant": "Mechanic",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 26,
+          "Transaction Type": "debit",
+          "Date": "24-09-2025",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "dinner date",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "The Place",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 27,
+          "Transaction Type": "debit",
+          "Date": "25-09-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "water refill",
+          "Category": "Utilities",
+          "Sub category": "Water",
+          "Merchant": "Water Vendor",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 29,
+          "Transaction Type": "debit",
+          "Date": "30-09-2025",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "savings transfer",
+          "Category": "Savings",
+          "Sub category": "Savings Transfer",
+          "Merchant": "PiggyVest",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 32,
+          "Transaction Type": "debit",
+          "Date": "01-10-2025",
+          "Amount": 180000,
+          "Invoice Id": "",
+          "Source or Reason": "rent contribution",
+          "Category": "Housing",
+          "Sub category": "Rent",
+          "Merchant": "Landlord",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 33,
+          "Transaction Type": "debit",
+          "Date": "02-10-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "nepa token",
+          "Category": "Utilities",
+          "Sub category": "Electricity",
+          "Merchant": "Ikeja Electric",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 34,
+          "Transaction Type": "debit",
+          "Date": "02-10-2025",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 35,
+          "Transaction Type": "debit",
+          "Date": "03-10-2025",
+          "Amount": 20000,
+          "Invoice Id": "",
+          "Source or Reason": "data + calls",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "Airtel",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 36,
+          "Transaction Type": "debit",
+          "Date": "04-10-2025",
+          "Amount": 38000,
+          "Invoice Id": "",
+          "Source or Reason": "groceries",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Shoprite",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 37,
+          "Transaction Type": "debit",
+          "Date": "05-10-2025",
+          "Amount": 7500,
+          "Invoice Id": "",
+          "Source or Reason": "sunday transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 38,
+          "Transaction Type": "debit",
+          "Date": "05-10-2025",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "church tithe",
+          "Category": "Savings",
+          "Sub category": "Charity/Donations",
+          "Merchant": "Church",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 39,
+          "Transaction Type": "debit",
+          "Date": "06-10-2025",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "fuel",
+          "Category": "Utilities",
+          "Sub category": "Fuel",
+          "Merchant": "NNPC",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 40,
+          "Transaction Type": "debit",
+          "Date": "07-10-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "house help",
+          "Category": "Shopping",
+          "Sub category": "Home Services",
+          "Merchant": "House Help",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 41,
+          "Transaction Type": "debit",
+          "Date": "08-10-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "lunch",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "Sweet Sensation",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 43,
+          "Transaction Type": "debit",
+          "Date": "11-10-2025",
+          "Amount": 65000,
+          "Invoice Id": "INV-1011",
+          "Source or Reason": "new tyre",
+          "Category": "Transport",
+          "Sub category": "Vehicle Maintenance",
+          "Merchant": "Vulcanizer",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 44,
+          "Transaction Type": "debit",
+          "Date": "12-10-2025",
+          "Amount": 9000,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Uber",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 45,
+          "Transaction Type": "debit",
+          "Date": "13-10-2025",
+          "Amount": 5000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "Glo",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 46,
+          "Transaction Type": "debit",
+          "Date": "14-10-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "wifi subscription",
+          "Category": "Utilities",
+          "Sub category": "Home Internet",
+          "Merchant": "Spectranet",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 47,
+          "Transaction Type": "debit",
+          "Date": "15-10-2025",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "netflix",
+          "Category": "Entertainment",
+          "Sub category": "Streaming",
+          "Merchant": "Netflix",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 48,
+          "Transaction Type": "debit",
+          "Date": "16-10-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "dstv",
+          "Category": "Entertainment",
+          "Sub category": "Cable TV",
+          "Merchant": "DStv",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 49,
+          "Transaction Type": "debit",
+          "Date": "17-10-2025",
+          "Amount": 24000,
+          "Invoice Id": "",
+          "Source or Reason": "pharmacy",
+          "Category": "Health",
+          "Sub category": "Medicine",
+          "Merchant": "Pharmacy",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 50,
+          "Transaction Type": "debit",
+          "Date": "18-10-2025",
+          "Amount": 47000,
+          "Invoice Id": "",
+          "Source or Reason": "foodstuff",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Mile 12 Market",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 52,
+          "Transaction Type": "debit",
+          "Date": "21-10-2025",
+          "Amount": 35000,
+          "Invoice Id": "INV-1021",
+          "Source or Reason": "bike repair",
+          "Category": "Transport",
+          "Sub category": "Vehicle Maintenance",
+          "Merchant": "Mechanic",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 53,
+          "Transaction Type": "debit",
+          "Date": "23-10-2025",
+          "Amount": 28000,
+          "Invoice Id": "",
+          "Source or Reason": "shoes",
+          "Category": "Shopping",
+          "Sub category": "Clothing",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 54,
+          "Transaction Type": "debit",
+          "Date": "24-10-2025",
+          "Amount": 4500,
+          "Invoice Id": "",
+          "Source or Reason": "snacks",
+          "Category": "Food",
+          "Sub category": "Snacks",
+          "Merchant": "Supermart",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 55,
+          "Transaction Type": "debit",
+          "Date": "26-10-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "water",
+          "Category": "Utilities",
+          "Sub category": "Water",
+          "Merchant": "Water Vendor",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 56,
+          "Transaction Type": "debit",
+          "Date": "28-10-2025",
+          "Amount": 40000,
+          "Invoice Id": "",
+          "Source or Reason": "data device",
+          "Category": "Shopping",
+          "Sub category": "Electronics",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 58,
+          "Transaction Type": "debit",
+          "Date": "31-10-2025",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "savings transfer",
+          "Category": "Savings",
+          "Sub category": "Savings Transfer",
+          "Merchant": "PiggyVest",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 61,
+          "Transaction Type": "debit",
+          "Date": "01-11-2025",
+          "Amount": 180000,
+          "Invoice Id": "",
+          "Source or Reason": "rent contribution",
+          "Category": "Housing",
+          "Sub category": "Rent",
+          "Merchant": "Landlord",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 62,
+          "Transaction Type": "debit",
+          "Date": "02-11-2025",
+          "Amount": 16000,
+          "Invoice Id": "",
+          "Source or Reason": "nepa token",
+          "Category": "Utilities",
+          "Sub category": "Electricity",
+          "Merchant": "Ikeja Electric",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 63,
+          "Transaction Type": "debit",
+          "Date": "02-11-2025",
+          "Amount": 7000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 64,
+          "Transaction Type": "debit",
+          "Date": "03-11-2025",
+          "Amount": 20000,
+          "Invoice Id": "",
+          "Source or Reason": "data subscription",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "Airtel",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 65,
+          "Transaction Type": "debit",
+          "Date": "04-11-2025",
+          "Amount": 41000,
+          "Invoice Id": "",
+          "Source or Reason": "groceries",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Shoprite",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 66,
+          "Transaction Type": "debit",
+          "Date": "05-11-2025",
+          "Amount": 10000,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 67,
+          "Transaction Type": "debit",
+          "Date": "06-11-2025",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "fuel",
+          "Category": "Utilities",
+          "Sub category": "Fuel",
+          "Merchant": "NNPC",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 68,
+          "Transaction Type": "debit",
+          "Date": "07-11-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "household supplies",
+          "Category": "Shopping",
+          "Sub category": "Household Supplies",
+          "Merchant": "Spar",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 69,
+          "Transaction Type": "debit",
+          "Date": "08-11-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "eatery",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "The Place",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 71,
+          "Transaction Type": "debit",
+          "Date": "11-11-2025",
+          "Amount": 55000,
+          "Invoice Id": "INV-1111",
+          "Source or Reason": "gadget purchase",
+          "Category": "Shopping",
+          "Sub category": "Electronics",
+          "Merchant": "Jumia",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 72,
+          "Transaction Type": "debit",
+          "Date": "12-11-2025",
+          "Amount": 9500,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Uber",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 73,
+          "Transaction Type": "debit",
+          "Date": "13-11-2025",
+          "Amount": 5000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "Glo",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 74,
+          "Transaction Type": "debit",
+          "Date": "14-11-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "wifi",
+          "Category": "Utilities",
+          "Sub category": "Home Internet",
+          "Merchant": "Spectranet",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 75,
+          "Transaction Type": "debit",
+          "Date": "15-11-2025",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "netflix",
+          "Category": "Entertainment",
+          "Sub category": "Streaming",
+          "Merchant": "Netflix",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 76,
+          "Transaction Type": "debit",
+          "Date": "16-11-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "dstv",
+          "Category": "Entertainment",
+          "Sub category": "Cable TV",
+          "Merchant": "DStv",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 77,
+          "Transaction Type": "debit",
+          "Date": "17-11-2025",
+          "Amount": 38000,
+          "Invoice Id": "",
+          "Source or Reason": "medical bill",
+          "Category": "Health",
+          "Sub category": "Clinic Visit",
+          "Merchant": "Hospital",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 78,
+          "Transaction Type": "debit",
+          "Date": "18-11-2025",
+          "Amount": 48000,
+          "Invoice Id": "",
+          "Source or Reason": "foodstuff",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Mile 12 Market",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 80,
+          "Transaction Type": "debit",
+          "Date": "21-11-2025",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "clothing",
+          "Category": "Shopping",
+          "Sub category": "Clothing",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 81,
+          "Transaction Type": "debit",
+          "Date": "22-11-2025",
+          "Amount": 4000,
+          "Invoice Id": "",
+          "Source or Reason": "snacks",
+          "Category": "Food",
+          "Sub category": "Snacks",
+          "Merchant": "Supermart",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 82,
+          "Transaction Type": "debit",
+          "Date": "24-11-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "water",
+          "Category": "Utilities",
+          "Sub category": "Water",
+          "Merchant": "Water Vendor",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 83,
+          "Transaction Type": "debit",
+          "Date": "25-11-2025",
+          "Amount": 70000,
+          "Invoice Id": "INV-1125",
+          "Source or Reason": "car service",
+          "Category": "Transport",
+          "Sub category": "Vehicle Maintenance",
+          "Merchant": "Mechanic",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 85,
+          "Transaction Type": "debit",
+          "Date": "30-11-2025",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "savings transfer",
+          "Category": "Savings",
+          "Sub category": "Savings Transfer",
+          "Merchant": "PiggyVest",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 88,
+          "Transaction Type": "debit",
+          "Date": "01-12-2025",
+          "Amount": 180000,
+          "Invoice Id": "",
+          "Source or Reason": "rent contribution",
+          "Category": "Housing",
+          "Sub category": "Rent",
+          "Merchant": "Landlord",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 89,
+          "Transaction Type": "debit",
+          "Date": "02-12-2025",
+          "Amount": 20000,
+          "Invoice Id": "",
+          "Source or Reason": "nepa token",
+          "Category": "Utilities",
+          "Sub category": "Electricity",
+          "Merchant": "Ikeja Electric",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 90,
+          "Transaction Type": "debit",
+          "Date": "02-12-2025",
+          "Amount": 8000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 91,
+          "Transaction Type": "debit",
+          "Date": "03-12-2025",
+          "Amount": 22000,
+          "Invoice Id": "",
+          "Source or Reason": "data subscription",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "Airtel",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 92,
+          "Transaction Type": "debit",
+          "Date": "04-12-2025",
+          "Amount": 50000,
+          "Invoice Id": "",
+          "Source or Reason": "groceries",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Shoprite",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 93,
+          "Transaction Type": "debit",
+          "Date": "05-12-2025",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 94,
+          "Transaction Type": "debit",
+          "Date": "06-12-2025",
+          "Amount": 35000,
+          "Invoice Id": "",
+          "Source or Reason": "fuel",
+          "Category": "Utilities",
+          "Sub category": "Fuel",
+          "Merchant": "NNPC",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 95,
+          "Transaction Type": "debit",
+          "Date": "07-12-2025",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "church tithe",
+          "Category": "Savings",
+          "Sub category": "Charity/Donations",
+          "Merchant": "Church",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 96,
+          "Transaction Type": "debit",
+          "Date": "08-12-2025",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "holiday shopping",
+          "Category": "Shopping",
+          "Sub category": "Clothing",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 97,
+          "Transaction Type": "debit",
+          "Date": "10-12-2025",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "dstv",
+          "Category": "Entertainment",
+          "Sub category": "Cable TV",
+          "Merchant": "DStv",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 98,
+          "Transaction Type": "debit",
+          "Date": "11-12-2025",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "netflix",
+          "Category": "Entertainment",
+          "Sub category": "Streaming",
+          "Merchant": "Netflix",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 100,
+          "Transaction Type": "debit",
+          "Date": "13-12-2025",
+          "Amount": 95000,
+          "Invoice Id": "INV-1213",
+          "Source or Reason": "family support",
+          "Category": "Savings",
+          "Sub category": "Family Support",
+          "Merchant": "Family",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 101,
+          "Transaction Type": "debit",
+          "Date": "14-12-2025",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "wifi",
+          "Category": "Utilities",
+          "Sub category": "Home Internet",
+          "Merchant": "Spectranet",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 102,
+          "Transaction Type": "debit",
+          "Date": "16-12-2025",
+          "Amount": 40000,
+          "Invoice Id": "",
+          "Source or Reason": "medical",
+          "Category": "Health",
+          "Sub category": "Clinic Visit",
+          "Merchant": "Hospital",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 103,
+          "Transaction Type": "debit",
+          "Date": "18-12-2025",
+          "Amount": 70000,
+          "Invoice Id": "INV-1218",
+          "Source or Reason": "phone purchase",
+          "Category": "Shopping",
+          "Sub category": "Electronics",
+          "Merchant": "Slot",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 104,
+          "Transaction Type": "debit",
+          "Date": "20-12-2025",
+          "Amount": 65000,
+          "Invoice Id": "",
+          "Source or Reason": "foodstuff",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Mile 12 Market",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 105,
+          "Transaction Type": "debit",
+          "Date": "22-12-2025",
+          "Amount": 45000,
+          "Invoice Id": "",
+          "Source or Reason": "restaurant",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "Hard Rock Cafe",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 106,
+          "Transaction Type": "debit",
+          "Date": "24-12-2025",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "flight booking",
+          "Category": "Transport",
+          "Sub category": "Travel",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 107,
+          "Transaction Type": "debit",
+          "Date": "26-12-2025",
+          "Amount": 80000,
+          "Invoice Id": "",
+          "Source or Reason": "christmas outing",
+          "Category": "Entertainment",
+          "Sub category": "Events",
+          "Merchant": "discretionary",
+          "essentiality": "Wants",
+          "Budget bucket": "text",
+          "Extraction Source": false,
+          "Is recurring candidate": ""
+        }
+      },
+      {
+        "json": {
+          "row_number": 109,
+          "Transaction Type": "debit",
+          "Date": "31-12-2025",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "savings transfer",
+          "Category": "Savings",
+          "Sub category": "Savings Transfer",
+          "Merchant": "PiggyVest",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 112,
+          "Transaction Type": "debit",
+          "Date": "01-01-2026",
+          "Amount": 180000,
+          "Invoice Id": "",
+          "Source or Reason": "rent contribution",
+          "Category": "Housing",
+          "Sub category": "Rent",
+          "Merchant": "Landlord",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 113,
+          "Transaction Type": "debit",
+          "Date": "02-01-2026",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "nepa token",
+          "Category": "Utilities",
+          "Sub category": "Electricity",
+          "Merchant": "Ikeja Electric",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 114,
+          "Transaction Type": "debit",
+          "Date": "02-01-2026",
+          "Amount": 7000,
+          "Invoice Id": "",
+          "Source or Reason": "airtime",
+          "Category": "Utilities",
+          "Sub category": "Airtime",
+          "Merchant": "MTN",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 115,
+          "Transaction Type": "debit",
+          "Date": "03-01-2026",
+          "Amount": 25000,
+          "Invoice Id": "",
+          "Source or Reason": "data subscription",
+          "Category": "Utilities",
+          "Sub category": "Internet Data",
+          "Merchant": "Airtel",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 116,
+          "Transaction Type": "debit",
+          "Date": "04-01-2026",
+          "Amount": 45000,
+          "Invoice Id": "",
+          "Source or Reason": "groceries",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "Shoprite",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 117,
+          "Transaction Type": "debit",
+          "Date": "05-01-2026",
+          "Amount": 12000,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Bolt",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 118,
+          "Transaction Type": "debit",
+          "Date": "06-01-2026",
+          "Amount": 30000,
+          "Invoice Id": "",
+          "Source or Reason": "fuel",
+          "Category": "Utilities",
+          "Sub category": "Fuel",
+          "Merchant": "NNPC",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 120,
+          "Transaction Type": "debit",
+          "Date": "08-01-2026",
+          "Amount": 18000,
+          "Invoice Id": "",
+          "Source or Reason": "dstv",
+          "Category": "Entertainment",
+          "Sub category": "Cable TV",
+          "Merchant": "DStv",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 121,
+          "Transaction Type": "debit",
+          "Date": "09-01-2026",
+          "Amount": 6000,
+          "Invoice Id": "",
+          "Source or Reason": "netflix",
+          "Category": "Entertainment",
+          "Sub category": "Streaming",
+          "Merchant": "Netflix",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 122,
+          "Transaction Type": "debit",
+          "Date": "10-01-2026",
+          "Amount": 40000,
+          "Invoice Id": "INV-0110",
+          "Source or Reason": "bike repair",
+          "Category": "Transport",
+          "Sub category": "Vehicle Maintenance",
+          "Merchant": "Mechanic",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "invoice",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 123,
+          "Transaction Type": "debit",
+          "Date": "11-01-2026",
+          "Amount": 15000,
+          "Invoice Id": "",
+          "Source or Reason": "wifi",
+          "Category": "Utilities",
+          "Sub category": "Home Internet",
+          "Merchant": "Spectranet",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 124,
+          "Transaction Type": "debit",
+          "Date": "12-01-2026",
+          "Amount": 35000,
+          "Invoice Id": "",
+          "Source or Reason": "restaurant",
+          "Category": "Food",
+          "Sub category": "Restaurant Dining",
+          "Merchant": "The Place",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 125,
+          "Transaction Type": "debit",
+          "Date": "13-01-2026",
+          "Amount": 20000,
+          "Invoice Id": "",
+          "Source or Reason": "pharmacy",
+          "Category": "Health",
+          "Sub category": "Medicine",
+          "Merchant": "Pharmacy",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 126,
+          "Transaction Type": "debit",
+          "Date": "14-01-2026",
+          "Amount": 50000,
+          "Invoice Id": "",
+          "Source or Reason": "bag of rice",
+          "Category": "Food",
+          "Sub category": "Groceries",
+          "Merchant": "",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 127,
+          "Transaction Type": "debit",
+          "Date": "14-01-2026",
+          "Amount": 84000,
+          "Invoice Id": 7,
+          "Source or Reason": "restaurant dining services",
+          "Category": "Food",
+          "Sub category": "Restaurant dining",
+          "Merchant": "",
+          "essentiality": "discretionary",
+          "Budget bucket": "Wants",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      },
+      {
+        "json": {
+          "row_number": 129,
+          "Transaction Type": "debit",
+          "Date": "16-01-2026",
+          "Amount": 120000,
+          "Invoice Id": "",
+          "Source or Reason": "savings transfer",
+          "Category": "Savings",
+          "Sub category": "Savings Transfer",
+          "Merchant": "PiggyVest",
+          "essentiality": "ambiguous",
+          "Budget bucket": "Savings",
+          "Extraction Source": "text",
+          "Is recurring candidate": true
+        }
+      },
+      {
+        "json": {
+          "row_number": 130,
+          "Transaction Type": "debit",
+          "Date": "16-01-2026",
+          "Amount": 9500,
+          "Invoice Id": "",
+          "Source or Reason": "transport",
+          "Category": "Transport",
+          "Sub category": "Ride Hailing",
+          "Merchant": "Uber",
+          "essentiality": "essential",
+          "Budget bucket": "Needs",
+          "Extraction Source": "text",
+          "Is recurring candidate": false
+        }
+      }
+    ],
+    "Compute Pace + Advice Candidates1": [
+      {
+        "json": {
+          "monthKey": "January, 2026",
+          "budget": 500000,
+          "spent": 721500,
+          "daysElapsed": 16,
+          "daysInMonth": 31,
+          "timeRatio": 0.5161290322580645,
+          "spendRatio": 1.443,
+          "expectedSpentSafe": 258064.51612903224,
+          "overSafeBy": 463435.48387096776,
+          "projectedMonthEnd": 1397906.25,
+          "projectedOverPct": 1.7958125,
+          "cutTarget": 463435.48387096776,
+          "discretionary": [
+            {
+              "amount": 84000,
+              "merchant": null,
+              "category": "Food",
+              "subCategory": "Restaurant dining",
+              "reason": "restaurant dining services"
+            },
+            {
+              "amount": 35000,
+              "merchant": "The Place",
+              "category": "Food",
+              "subCategory": "Restaurant Dining",
+              "reason": "restaurant"
+            },
+            {
+              "amount": 18000,
+              "merchant": "DStv",
+              "category": "Entertainment",
+              "subCategory": "Cable TV",
+              "reason": "dstv"
+            }
+          ],
+          "shouldNotify": true,
+          "messageDraft": "Pace check (January, 2026)\nBudget: ₦500000\nSpent: ₦721500 (144%) in 16 days\n\nSafe pace by today: ₦258065\nOver safe pace: ₦463435\nAt this pace, projected overshoot: ~180%\n\nAction: Cut ~₦463435 from discretionary spending.\nStart with these discretionary spends:\n1) ₦84000 — Restaurant dining (restaurant dining services)\n2) ₦35000 — The Place (restaurant)\n3) ₦18000 — DStv (dstv)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Authenticate Chat ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "10 secs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "If Spent > 90% of Budget",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Spent > 90% of Budget": {
+      "main": [
+        [
+          {
+            "node": "Send a text message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authenticate Chat ID": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message | Unknown Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 secs": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Resolve Budget",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Budget": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Compute Pace + Advice Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Pace + Advice Candidates": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet4": {
+      "main": [
+        [
+          {
+            "node": "Resolve Budget1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Budget1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet5": {
+      "main": [
+        [
+          {
+            "node": "Compute Pace + Advice Candidates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Pace + Advice Candidates1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "06b163dc-a17f-49c5-82ff-f3e628d0b2fd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "093322b16782c74148540895609094f4430bf335f1a3f92f6e0567f7ad4a79e4"
+  },
+  "id": "yRpecDqFNi0A3upq",
+  "tags": []
+}
