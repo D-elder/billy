@@ -53,7 +53,7 @@ Billy runs on a modular **n8n** workflow that decouples data ingestion (real-tim
 * **Google Cloud Service Account** (with Google Sheets and Drive API enabled).
 
 ### Step 1: Import the Workflow
-1.  Download the `runcraft.json` file from this repository.
+1.  Download the `billy.json` file from this repository.
 2.  Open your n8n instance.
 3.  Click **Import workflow** (top right) and select the JSON file.
 
